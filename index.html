@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="styles.css">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<title>iSenseLabs Zipper</title>
+</head>
+
+<body>
+    <div class="container">
+    	<div class="row">
+        	<div class="col-md-12">
+            	<h1>iSenseLabs Zipper</h1>
+            </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="row">
+        	<div class="col-md-12">
+            	<form class="form-inline">
+                	<div class="form-group">
+                    	<label for="flushToDisk">Flush to disk every </label>
+                        <div class="input-group">
+                        	<input type="number" class="form-control" id="flushToDisk" maxlength="2" size="2" min="1" max="100" value="50" />
+                            <div class="input-group-addon">files</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                    	<label for="maxExecutionTime">Max execution time of a single request </label>
+                        <div class="input-group">
+                        	<input type="number" class="form-control" id="maxExecutionTime" maxlength="2" size="2" min="10" max="3600" value="20" />
+                            <div class="input-group-addon">seconds</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="spacer"></div>
+    	<div class="row">
+        	<div class="col-md-12">
+            	<div class="well" id="directoryListingContainer">
+                	<ul id="directoryListing">
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="row">
+        	<div class="col-md-12">
+            	<a class="btn btn-primary pull-left" id="btnZipSelected">Zip Selected</a><a class="btn btn-primary pull-right" id="btnZipAll">Zip the whole directory</a>
+            </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="row">
+        	<div class="col-md-12">
+            	<div class="progress">
+                  <div id="progressBar" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    <span id="progressBarMsg">0% Complete</span>
+                  </div>
+                </div>
+                <textarea id="processLog"></textarea>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="main.js"></script>
+</html>
