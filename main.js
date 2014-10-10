@@ -111,6 +111,7 @@ function zip(target_paths) {
 	
 	var flushToDisk = $('#flushToDisk').val() ? $('#flushToDisk').val() : 50;
 	var maxExecutionTime = $('#maxExecutionTime').val() ? $('#maxExecutionTime').val() : 20;
+	var exclude_strings = $('#excludes').val() ? $('#excludes').val() : '';
 	
 	$.ajax({
 		url: 'zip.php',
@@ -119,6 +120,7 @@ function zip(target_paths) {
 			targets: target_paths,
 			flush_to_disk: flushToDisk,
 			max_execution_time: maxExecutionTime,
+			excludes: exclude_strings,
 			is_initial_run: initialRun,
 			oFile: o_file
 		},

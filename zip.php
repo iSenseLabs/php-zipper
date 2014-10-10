@@ -21,20 +21,22 @@ function zip_dir($path, $base = '') {
 		set_time_limit(60);
 		
 		$full_path = rtrim($path) .'/'. $entry;
+		if (is_excluded($full_path)) continue;
+		
 		if (is_dir($full_path)) {
 			if ($iteration_number > $progress->getProgress(false)) {
-				$progress->addMsg('Adding directory "' . basename($full_path) . '"');
+				$progress->addMsg('Adding directory "' . $full_path . '"');
 				zip_dir($full_path, $base.'/'.$entry);
-				$progress->addMsg('Added the directory "' . basename($full_path) . '"');
+				$progress->addMsg('Added the directory "' . $full_path . '"');
 			} else {
 				zip_dir($full_path, $base.'/'.$entry);
 			}
 		} else {
 			$iteration_number++;
 			if ($iteration_number > $progress->getProgress(false)) {
-				$progress->addMsg('Adding file "' . basename($full_path) . '"');
+				$progress->addMsg('Adding file "' . $full_path . '"');
 				$zip->addFile($full_path, $base.'/'.$entry);
-				$progress->addMsg('Added the file "' . basename($full_path) . '"');
+				$progress->addMsg('Added the file "' . $full_path . '"');
 				$progress->iterateWith(1);
 				
 				if ($zip->numFiles % 50 == 0) flush_zip();//Write to disk every 50 files. This should free the memory taken up to this point
@@ -65,6 +67,24 @@ function headers_length() {
 	return $length;
 }
 
+function is_excluded($path) {
+	global $excludes;
+	foreach ($excludes as $e) {
+		if (strpos($path, $e) !== false) return true;
+	}
+	
+	return false;
+}
+
+function build_exclude_find_params() {
+	global $excludes;
+	$params = '';
+	foreach ($excludes as $e) {
+		$params .= ' -not -path "*'.$e.'*"';
+	}
+	return $params;
+}
+
 require_once 'iprogress.php';
 $progress = new iProgress('zip', true, 200);
 
@@ -80,6 +100,8 @@ if (!$targets) {
 $is_initial_run = !empty($_POST['is_initial_run']);
 $flush_to_disk = !empty($_POST['flush_to_disk']) ? (int)$_POST['flush_to_disk'] : 50;
 $max_execution_time = !empty($_POST['max_execution_time']) ? (int)$_POST['max_execution_time'] : true;
+$exclude_string = !empty($_POST['excludes']) ? $_POST['excludes'] : '';
+$excludes = array_filter(array_map('trim', explode(',', $exclude_string)));
 
 if ($is_initial_run) {
 	$progress->addMsg('Scanning files to be compressed...');
@@ -95,7 +117,7 @@ foreach ($targets as $target) {
 	if (file_exists($path)) {
 		if ($is_initial_run) {
 			if (is_dir($path)) {
-				exec('find '.$path.' -follow -type f | wc -l', $output);
+				exec('find '.$path.' -follow -type f'.build_exclude_find_params().' | wc -l', $output);
 				if (!empty($output[0])) {
 					$subtargets = (int)trim($output[0]);
 					$total_targets += $subtargets;
@@ -122,24 +144,26 @@ $iteration_number = 0;
 
 if ($total_targets && $true_targets) {
 	foreach ($true_targets as $target) {
+		if (is_excluded($target)) continue;
+		
 		$execution_time = microtime(true)-$startTime;
 		if ($execution_time >= $max_execution_time || headers_length() > 10000) stop_iteration();
 		
 		set_time_limit(60);
 		if (is_dir($target)) {
 			if ($iteration_number > $progress->getProgress(false)) {
-				$progress->addMsg('Adding directory "' . basename($target) . '"');
+				$progress->addMsg('Adding directory "' . $target . '"');
 				zip_dir($target, basename($target));
-				$progress->addMsg('Added the directory "' . basename($target) . '"');
+				$progress->addMsg('Added the directory "' . $target . '"');
 			} else {
 				zip_dir($target, basename($target));
 			}
 		} else {
 			$iteration_number++;
 			if ($iteration_number > $progress->getProgress(false)) {
-				$progress->addMsg('Adding file "' . basename($target) . '"');
+				$progress->addMsg('Adding file "' . $target . '"');
 				$zip->addFile($target, basename($target));
-				$progress->addMsg('Added the file "' . basename($target) . '"');
+				$progress->addMsg('Added the file "' . $target . '"');
 				$progress->iterateWith(1);
 				
 				if ($zip->numFiles % 50 == 0) flush_zip();//Write to disk every 50 files. This should free the memory taken up to this point
