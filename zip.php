@@ -15,7 +15,7 @@ function zip_dir($path, $base = '') {
 	
 	foreach ($entries as $entry) {
 		$execution_time = microtime(true)-$startTime;
-		if ($execution_time >= $max_execution_time || headers_length() > 10000) stop_iteration();
+		if ($execution_time >= $max_execution_time) stop_iteration();
 		
 		if (in_array($entry, array('.', '..'))) continue;
 		set_time_limit(60);
@@ -57,16 +57,6 @@ function stop_iteration() {
 	echo json_encode($json);exit;
 }
 
-function headers_length() {
-	$headers = headers_list();
-	$length = 0;
-	foreach ($headers as $header) {
-		$length += strlen($header);
-	}
-	
-	return $length;
-}
-
 function is_excluded($path) {
 	global $excludes;
 	foreach ($excludes as $e) {
@@ -86,7 +76,7 @@ function build_exclude_find_params() {
 }
 
 require_once 'iprogress.php';
-$progress = new iProgress('zip', true, 200);
+$progress = new iProgress('zip', 200);
 
 $json = array();
 
@@ -111,6 +101,7 @@ if ($is_initial_run) {
 $total_targets = $is_initial_run ? 0 : $progress->getMax();
 $true_targets = array();
 
+clearstatcache(true);
 foreach ($targets as $target) {
 	$path = realpath($target);
 	
@@ -147,7 +138,7 @@ if ($total_targets && $true_targets) {
 		if (is_excluded($target)) continue;
 		
 		$execution_time = microtime(true)-$startTime;
-		if ($execution_time >= $max_execution_time || headers_length() > 10000) stop_iteration();
+		if ($execution_time >= $max_execution_time) stop_iteration();
 		
 		set_time_limit(60);
 		if (is_dir($target)) {

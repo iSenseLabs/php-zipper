@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 
 require_once 'iprogress.php';
-$progress = new iProgress('zip', true, 200);
+$progress = new iProgress('zip', 200);
 
 function array_flat($arr) {
 	$result = array();
