@@ -1,5 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="stylesheet" href="css/sweetalert.css">
@@ -44,44 +44,45 @@
             </div>
         </div>
     </div>
-<!-- Settings modal -->
-<div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="SettingsModal" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title" id="myModalLabel">Settings</h4>
-      </div>
-      <div class="modal-body">
-        <form class="form">
-        	<div class="form-group">
-            	<label for="flushToDisk">Flush to disk every </label>
-                <div class="input-group">
-                	<input type="number" class="form-control" id="flushToDisk" maxlength="2" size="2" min="1" max="100" value="50" />
-                    <div class="input-group-addon">files</div>
-                </div>
-            </div>
-            <div class="form-group">
-            	<label for="maxExecutionTime">Max execution time of a single request </label>
-                <div class="input-group">
-                	<input type="number" class="form-control" id="maxExecutionTime" maxlength="2" size="2" min="10" max="3600" value="20" />
-                    <div class="input-group-addon">seconds</div>
-                </div>
-            </div>
-            <div class="form-group">
-            	<label for="excludes">Excludes (separate with ",") </label>
-                <div class="input-group">
-                	<input type="text" class="form-control" id="excludes" value="" />
-                </div>
-            </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-dismiss="modal">Done</button>
-      </div>
-    </div>
-  </div>
-</div>
+    
+	<!-- Settings modal -->
+	<div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="SettingsModal" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+	        <h4 class="modal-title" id="myModalLabel">Settings</h4>
+	      </div>
+	      <div class="modal-body">
+	        <form class="form">
+	        	<div class="form-group">
+	            	<label for="flushToDisk">Flush to disk every </label>
+	                <div class="input-group">
+	                	<input type="number" class="form-control" id="flushToDisk" maxlength="2" size="2" min="1" max="100" value="50" />
+	                    <div class="input-group-addon">files</div>
+	                </div>
+	            </div>
+	            <div class="form-group">
+	            	<label for="maxExecutionTime">Max execution time of a single request </label>
+	                <div class="input-group">
+	                	<input type="number" class="form-control" id="maxExecutionTime" maxlength="2" size="2" min="10" max="3600" value="20" />
+	                    <div class="input-group-addon">seconds</div>
+	                </div>
+	            </div>
+	            <div class="form-group">
+	            	<label for="excludes">Excludes (separate with ",") </label>
+	                <div class="input-group">
+	                	<input type="text" class="form-control" id="excludes" value="" />
+	                </div>
+	            </div>
+	        </form>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-primary" data-dismiss="modal">Done</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
 </body>
 <script type="text/javascript" src="js/main.js"></script>
 </html>
