@@ -16,6 +16,10 @@
 	min-width: 20px;
 }
 
+#btnSettings {
+    cursor: pointer;
+}
+
 .spacer {
 	display: block;
 	clear:both;

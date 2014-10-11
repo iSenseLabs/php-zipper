@@ -27,7 +27,6 @@ function zip_dir($path, $base = '') {
 			if ($iteration_number > $progress->getProgress(false)) {
 				$progress->addMsg('Adding directory "' . $full_path . '"');
 				zip_dir($full_path, $base.'/'.$entry);
-				$progress->addMsg('Added the directory "' . $full_path . '"');
 			} else {
 				zip_dir($full_path, $base.'/'.$entry);
 			}
@@ -36,7 +35,6 @@ function zip_dir($path, $base = '') {
 			if ($iteration_number > $progress->getProgress(false)) {
 				$progress->addMsg('Adding file "' . $full_path . '"');
 				$zip->addFile($full_path, $base.'/'.$entry);
-				$progress->addMsg('Added the file "' . $full_path . '"');
 				$progress->iterateWith(1);
 				
 				if ($zip->numFiles % 50 == 0) flush_zip();//Write to disk every 50 files. This should free the memory taken up to this point
@@ -145,7 +143,6 @@ if ($total_targets && $true_targets) {
 			if ($iteration_number > $progress->getProgress(false)) {
 				$progress->addMsg('Adding directory "' . $target . '"');
 				zip_dir($target, basename($target));
-				$progress->addMsg('Added the directory "' . $target . '"');
 			} else {
 				zip_dir($target, basename($target));
 			}
@@ -154,7 +151,6 @@ if ($total_targets && $true_targets) {
 			if ($iteration_number > $progress->getProgress(false)) {
 				$progress->addMsg('Adding file "' . $target . '"');
 				$zip->addFile($target, basename($target));
-				$progress->addMsg('Added the file "' . $target . '"');
 				$progress->iterateWith(1);
 				
 				if ($zip->numFiles % 50 == 0) flush_zip();//Write to disk every 50 files. This should free the memory taken up to this point
@@ -167,9 +163,11 @@ if ($total_targets && $true_targets) {
 
 $zip->close();
 
+$file_url = '//'.$_SERVER['SERVER_NAME'] . dirname($_SERVER['SCRIPT_NAME']) . '/' . basename($oFile);
 $json = array(
 	'error' => false,
 	'continue' => false,
-	'oFile' => ''
+	'oFile' => '',
+	'fileURL' => $file_url
 );
 echo json_encode($json);exit;

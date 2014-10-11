@@ -18,7 +18,7 @@ function populate_dir_listing(entries) {
 	if (entries.dirs) {
 		var dir_html = '';
 		for (x in entries.dirs) {
-			dir_html += '<li><input type="checkbox" name="targetEntries" value="'+x+'" />&nbsp;<i class="glyphicon glyphicon-folder-close"></i>&nbsp;<a class="dir-listing-entry" data-key="'+x+'">'+entries.dirs[x].name+'</a></li>';
+			dir_html += '<div class="checkbox"><input type="checkbox" name="targetEntries" value="'+x+'" id="'+x+'" /><label for="'+x+'"><i class="glyphicon glyphicon-folder-close"></i>&nbsp;<a class="dir-listing-entry" data-key="'+x+'">'+entries.dirs[x].name+'</a></label></div>';
 		}
 		dirListingObj.append(dir_html);
 	}
@@ -26,7 +26,7 @@ function populate_dir_listing(entries) {
 	if (entries.files) {
 		var files_html = '';
 		for (x in entries.files) {
-			files_html += '<li><input type="checkbox" name="targetEntries" value="'+x+'" />&nbsp;<i class="glyphicon glyphicon-file"></i>&nbsp;'+entries.files[x].name+'</li>';
+			files_html += '<div class="checkbox"><input type="checkbox" name="targetEntries" value="'+x+'" id="'+x+'" /><label for="'+x+'"><i class="glyphicon glyphicon-file"></i>&nbsp;'+entries.files[x].name+'</label></div>';
 		}
 		dirListingObj.append(files_html);
 	}
@@ -48,7 +48,11 @@ function get_dir_listing(target_dir) {
 				dir_listing = resp.entries;
 				populate_dir_listing(dir_listing);
 			} else {
-				alert(resp.msg);
+				swal({
+				    title: 'Error:',
+				    text: resp.msg,
+				    type: 'error'
+				});
 			}
 		}
 	});
@@ -135,12 +139,28 @@ function zip(target_paths) {
 		success: function(resp) {
 			lastZipResponse = resp;
 			if (resp.error) {
-				alert(resp.msg);
+				swal({
+				    title: 'Error:',
+				    text: resp.msg,
+				    type: 'error'
+				});
 			} else {
 				if (resp.continue) {
 					if (resp.oFile) {
 						o_file = resp.oFile;
 					}
+				} else if (resp.fileURL) {
+				    swal({
+    				    title: 'Your ZIP is ready!',
+    				    text: 'Would you like to download it?',
+    				    type: 'success',
+    				    showCancelButton: true,
+    				    confirmButtonText: 'Downlaod',
+    				    confirmButtonColor: '#FF4A4A'
+    				},
+    				function(){
+    				    window.location = resp.fileURL;
+    				});
 				}
 			}
 		},
