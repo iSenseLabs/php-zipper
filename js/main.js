@@ -8,7 +8,6 @@ var processFinished = true;
 var progressLastRun = false;
 var lastPrintedMessage = '';
 var initialRun = 1;
-var o_file = '';
 var selected_paths = [];
 var lastZipResponse = {};
 
@@ -116,6 +115,7 @@ function zip(target_paths) {
 	var flushToDisk = $('#flushToDisk').val() ? $('#flushToDisk').val() : 50;
 	var maxExecutionTime = $('#maxExecutionTime').val() ? $('#maxExecutionTime').val() : 20;
 	var exclude_strings = $('#excludes').val() ? $('#excludes').val() : '';
+	var useSystemCalls = $('#useSystemCalls').is(':checked');
 	
 	$.ajax({
 		url: 'zip.php',
@@ -126,7 +126,7 @@ function zip(target_paths) {
 			max_execution_time: maxExecutionTime,
 			excludes: exclude_strings,
 			is_initial_run: initialRun,
-			oFile: o_file
+			use_system_calls: useSystemCalls
 		},
 		dataType: 'json',
 		beforeSend: function() {
@@ -145,11 +145,7 @@ function zip(target_paths) {
 				    type: 'error'
 				});
 			} else {
-				if (resp.continue) {
-					if (resp.oFile) {
-						o_file = resp.oFile;
-					}
-				} else if (resp.fileURL) {
+				if (resp.fileURL) {
 				    swal({
     				    title: 'Your ZIP is ready!',
     				    text: 'Would you like to download it?',

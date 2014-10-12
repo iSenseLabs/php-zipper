@@ -44,13 +44,12 @@ function zip_dir($path, $base = '') {
 }
 
 function stop_iteration() {
-	global $oFile, $zip;
+	global $zip;
 	$zip->close();
 	
 	$json = array(
 		'error' => false,
-		'continue' => true,
-		'oFile' => $oFile
+		'continue' => true
 	);
 	echo json_encode($json);exit;
 }
@@ -73,6 +72,39 @@ function build_exclude_find_params() {
 	return $params;
 }
 
+function count_dir_files($path) {
+	global $use_system_calls;
+	
+	$path = rtrim($path, '/');
+	if ($use_system_calls) {
+		exec('find '.$path.' -follow -type f'.build_exclude_find_params().' | wc -l', $output);
+		if (!empty($output[0])) {
+			return (int)trim($output[0]);
+		}
+		return 0;
+	} else {
+		$total = 0;
+		if (!is_excluded($path)) {
+			if (is_dir($path)) {
+				$dh = opendir($path);
+				while(false !== ($entry = readdir($dh))) {
+					if (!in_array($entry, array('.','..')) && !is_excluded($entry)) {
+						$full_path = $path . '/' . $entry;
+						if (is_dir($full_path)) {
+							$total += count_dir_files($full_path);
+						} else {
+							$total++;
+						}
+					}
+				}
+			} else {
+				$total++;
+			}
+		}
+		return $total;
+	}
+}
+
 require_once 'iprogress.php';
 $progress = new iProgress('zip', 200);
 
@@ -87,13 +119,14 @@ if (!$targets) {
 
 $is_initial_run = !empty($_POST['is_initial_run']);
 $flush_to_disk = !empty($_POST['flush_to_disk']) ? (int)$_POST['flush_to_disk'] : 50;
-$max_execution_time = !empty($_POST['max_execution_time']) ? (int)$_POST['max_execution_time'] : true;
+$max_execution_time = !empty($_POST['max_execution_time']) ? (int)$_POST['max_execution_time'] : 20;
 $exclude_string = !empty($_POST['excludes']) ? $_POST['excludes'] : '';
 $excludes = array_filter(array_map('trim', explode(',', $exclude_string)));
+$use_system_calls = (!empty($_POST['use_system_calls']) && $_POST['use_system_calls'] == 'true') ? true : false;
 
 if ($is_initial_run) {
-	$progress->addMsg('Scanning files to be compressed...');
 	$progress->clear();
+	$progress->addMsg('Scanning files to be compressed...');
 }
 
 $total_targets = $is_initial_run ? 0 : $progress->getMax();
@@ -106,11 +139,7 @@ foreach ($targets as $target) {
 	if (file_exists($path)) {
 		if ($is_initial_run) {
 			if (is_dir($path)) {
-				exec('find '.$path.' -follow -type f'.build_exclude_find_params().' | wc -l', $output);
-				if (!empty($output[0])) {
-					$subtargets = (int)trim($output[0]);
-					$total_targets += $subtargets;
-				}
+				$total_targets += count_dir_files($path);
 			} else {
 				$total_targets++;
 			}
@@ -125,7 +154,8 @@ if ($is_initial_run) {
 	$progress->setMax($total_targets);
 }
 
-$oFile = ($is_initial_run || empty($_POST['oFile'])) ? dirname(__FILE__).'/archive_'.time().'.zip' : $_POST['oFile'];
+$oFile = ($is_initial_run || empty($progress->getData('oFile'))) ? dirname(__FILE__).'/archive_'.time().'.zip' : $progress->getData('oFile');
+$progress->setData('oFile', $oFile);
 
 $zip = new ZipArchive();
 $zip->open($oFile, ZipArchive::CREATE);
@@ -167,7 +197,6 @@ $file_url = '//'.$_SERVER['SERVER_NAME'] . dirname($_SERVER['SCRIPT_NAME']) . '/
 $json = array(
 	'error' => false,
 	'continue' => false,
-	'oFile' => '',
 	'fileURL' => $file_url
 );
 echo json_encode($json);exit;

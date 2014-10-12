@@ -12,6 +12,7 @@ class iProgress {
 	private $progress_file = '';
 	private $state = array();
 	private $fp;
+	private $data = array();
 
     public function __construct($task = 'isense', $messageHistoryCount = 20) {
         $this->task_name = $task;
@@ -26,20 +27,24 @@ class iProgress {
         $this->messages = !empty($this->state['messages']) ? $this->state['messages'] : array();
         $this->last_message = !empty($this->state['last_message']) ? $this->state['last_message'] : '';
         $this->abortCalled = !empty($this->state['abort']) ? $this->state['abort'] : false;
+        $this->data = !empty($this->state['data']) ? json_decode($this->state['data'], true) : array();
     }
 	
 	public function __destruct() {
 		fclose($this->fp);
 	}
 
-    public function abort() { $this->abortCalled = true; $this->saveState(); }
+    public function abort() { $this->sync(); $this->abortCalled = true; $this->saveState(); }
     public function abortCalled() { $this->sync(); return $this->abortCalled; }
 
-    public function setMax($max) { $this->max_value = $max; $this->saveState(); }
+    public function setMax($max) { $this->sync(); $this->max_value = $max; $this->saveState(); }
     public function getMax() { $this->sync(); return $this->max_value; }
 
-    public function setProgress($progress) { $this->current_value = $progress; $this->saveState(); }
+    public function setProgress($progress) { $this->sync(); $this->current_value = $progress; $this->saveState(); }
     public function getProgress($sync = true) { if ($sync) $this->sync(); return $this->current_value; }
+    
+    public function setData($key, $value) { $this->sync(); $this->data[$key] = $value; $this->saveState(); }
+    public function getData($key) { $this->sync(); return isset($this->data[$key]) ? $this->data[$key] : NULL; }
 
     public function addMsg($msg) {
         $this->sync();
@@ -61,6 +66,7 @@ class iProgress {
         $this->messages = array();
         $this->last_message = '';
         $this->abortCalled = false;
+        $this->data = array();
         $this->saveState();
     }
 
@@ -90,6 +96,7 @@ class iProgress {
         $this->state['messages'] = $this->messages;
         $this->state['last_message'] = $this->last_message;
         $this->state['abort'] = $this->abortCalled;
+        $this->state['data'] = json_encode($this->data);
 		
 		if (is_resource($this->fp)) {
 			flock($this->fp, LOCK_EX);
@@ -120,12 +127,13 @@ class iProgress {
     private function sync() {
 		$this->loadState();
 		
-        if (!empty($this->state['max'])) { //if this one is set, the others will also be set
+        if (!empty($this->state['max'])) { //if one is set, the others will also be set
             $this->max_value = $this->state['max'];
             $this->current_value = $this->state['current'];
             $this->messages = $this->state['messages'];
             $this->last_message = $this->state['last_message'];
             $this->abortCalled = $this->state['abort'];
+            $this->data = json_decode($this->state['data'], true);
         }
     }
 }
