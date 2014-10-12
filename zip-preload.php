@@ -8,46 +8,10 @@ function flush_zip() {
 	$zip->open($oFile);
 }
 
-function zip_dir($path, $base = '') {
-	global $progress, $zip, $total_targets, $startTime, $max_execution_time, $is_initial_run, $iteration_number;
-	
-	$entries = scandir($path);
-	
-	foreach ($entries as $entry) {
-		abort_if_requested();
-		
-		$execution_time = microtime(true)-$startTime;
-		if ($execution_time >= $max_execution_time) stop_iteration();
-		
-		if (in_array($entry, array('.', '..'))) continue;
-		set_time_limit(60);
-		
-		$full_path = rtrim($path) .'/'. $entry;
-		if (is_excluded($full_path)) continue;
-		
-		if (is_dir($full_path)) {
-			if ($iteration_number > $progress->getProgress(false)) {
-				$progress->addMsg('Adding directory "' . $full_path . '"');
-				zip_dir($full_path, $base.'/'.$entry);
-			} else {
-				zip_dir($full_path, $base.'/'.$entry);
-			}
-		} else {
-			$iteration_number++;
-			if ($iteration_number > $progress->getProgress(false)) {
-				$progress->addMsg('Adding file "' . $full_path . '"');
-				$zip->addFile($full_path, $base.'/'.$entry);
-				$progress->iterateWith(1);
-				
-				if ($zip->numFiles % 50 == 0) flush_zip();//Write to disk every 50 files. This should free the memory taken up to this point
-			}
-		}
-	}
-}
-
 function stop_iteration() {
-	global $zip;
+	global $zip, $found_files_handle;
 	$zip->close();
+	fclose($found_files_handle);
 	
 	$json = array(
 		'error' => false,
@@ -74,11 +38,15 @@ function build_exclude_find_params() {
 	return $params;
 }
 
-function count_dir_files($path) {
-	global $use_system_calls;
+function count_dir_files($path, $log_found_files = '') {
+	global $use_system_calls, $found_files_handle;
 	
 	$path = rtrim($path, '/');
 	if ($use_system_calls) {
+	    if ($log_found_files) {
+		    exec('find '.$path.' -follow -type f'.build_exclude_find_params().' > ' . $log_found_files);
+		}
+		
 		exec('find '.$path.' -follow -type f'.build_exclude_find_params().' | wc -l', $output);
 		if (!empty($output[0])) {
 			return (int)trim($output[0]);
@@ -93,16 +61,20 @@ function count_dir_files($path) {
 					if (!in_array($entry, array('.','..')) && !is_excluded($entry)) {
 						$full_path = $path . '/' . $entry;
 						if (is_dir($full_path)) {
-							$total += count_dir_files($full_path);
+							$total += count_dir_files($full_path, $log_found_files);
 						} else {
+						    fwrite($found_files_handle, $full_path."\n");
 							$total++;
 						}
 					}
 				}
+				fflush($found_files_handle);
 			} else {
+			    fwrite($found_files_handle, $path."\n");
 				$total++;
 			}
 		}
+		fflush($found_files_handle);
 		return $total;
 	}
 }
@@ -145,27 +117,36 @@ if ($is_initial_run) {
 
 $total_targets = $is_initial_run ? 0 : $progress->getMax();
 $true_targets = array();
+$found_files_name = $is_initial_run ? dirname(__FILE__).'/zip_'.time().'.flist' : $progress->getData('file_list_log');
 
-clearstatcache(true);
-foreach ($targets as $target) {
-	$path = realpath($target);
-	
-	if (file_exists($path)) {
-		if ($is_initial_run) {
-			if (is_dir($path)) {
-				$total_targets += count_dir_files($path);
-			} else {
-				$total_targets++;
-			}
-		}
-		
-		$true_targets[] = $path;
-	}
+if ($is_initial_run) {
+    $found_files_handle = fopen($found_files_name, 'w+');
+
+    clearstatcache(true);
+    foreach ($targets as $target) {
+    	$path = realpath($target);
+    	
+    	if (file_exists($path)) {
+    		if ($is_initial_run) {
+    			if (is_dir($path)) {
+    				$total_targets += count_dir_files($path, $found_files_name);
+    			} else {
+    				$total_targets++;
+    			}
+    		}
+    		
+    		$true_targets[] = $path;
+    	}
+    }
+} else {
+    $found_files_handle = fopen($found_files_name, 'r');
 }
 
 if ($is_initial_run) {
 	$progress->addMsg('Found ' . $total_targets . ' items for zipping');
 	$progress->setMax($total_targets);
+	$progress->setData('file_list_log', $found_files_name);
+	$progress->setData('last_pointer_position', 0);
 }
 
 $oFile = ($is_initial_run || empty($progress->getData('oFile'))) ? dirname(__FILE__).'/archive_'.time().'.zip' : $progress->getData('oFile');
@@ -173,40 +154,33 @@ $progress->setData('oFile', $oFile);
 
 $zip = new ZipArchive();
 $zip->open($oFile, ZipArchive::CREATE);
-$iteration_number = 0;
 
-if ($total_targets && $true_targets) {
-	foreach ($true_targets as $target) {
-		abort_if_requested();
-		if (is_excluded($target)) continue;
-		
-		$execution_time = microtime(true)-$startTime;
-		if ($execution_time >= $max_execution_time) stop_iteration();
-		
-		set_time_limit(60);
-		if (is_dir($target)) {
-			if ($iteration_number > $progress->getProgress(false)) {
-				$progress->addMsg('Adding directory "' . $target . '"');
-				zip_dir($target, basename($target));
-			} else {
-				zip_dir($target, basename($target));
-			}
-		} else {
-			$iteration_number++;
-			if ($iteration_number > $progress->getProgress(false)) {
-				$progress->addMsg('Adding file "' . $target . '"');
-				$zip->addFile($target, basename($target));
-				$progress->iterateWith(1);
-				
-				if ($zip->numFiles % 50 == 0) flush_zip();//Write to disk every 50 files. This should free the memory taken up to this point
-			}
-		}
-	}
-	$progress->addMsg('--- The output file is: '.$oFile.' ---');
-	$progress->addMsg('--- Finished! ---');
+//Begin file iteration
+fseek($found_files_handle, $progress->getData('last_pointer_position'));
+
+while (false !== ($target = fgets($found_files_handle))) {
+    $target = trim($target);
+	abort_if_requested();
+	if (is_excluded($target)) continue;
+	
+	$execution_time = microtime(true)-$startTime;
+	if ($execution_time >= $max_execution_time) stop_iteration();
+	
+	set_time_limit(60);
+	$progress->addMsg('Adding file "' . $target . '"');
+	$zip->addFile($target, basename($target));
+	$progress->iterateWith(1);
+	$progress->setData('last_pointer_position', ftell($found_files_handle));
+	
+	if ($zip->numFiles % 50 == 0) flush_zip();//Write to disk every 50 files. This should free the memory taken up to this point
 }
 
+$progress->addMsg('--- The output file is: '.$oFile.' ---');
+$progress->addMsg('--- Finished! ---');
+//End file iteration
+
 $zip->close();
+fclose($found_files_handle);
 
 $file_url = '//'.$_SERVER['SERVER_NAME'] . dirname($_SERVER['SCRIPT_NAME']) . '/' . basename($oFile);
 $json = array(

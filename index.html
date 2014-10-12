@@ -35,8 +35,10 @@
                   </div>
                 </div>
                 <textarea id="processLog" disabled></textarea>
-                <a class="btn btn-primary pull-left" id="btnZipSelected">Zip Selected</a>
-            	<a class="btn btn-primary pull-right" id="btnZipAll">Zip the whole directory</a>
+                <a class="btn btn-default" id="btnZipSelected">Zip Selected</a>
+            	<a class="btn btn-default" id="btnZipAll">Zip the whole directory</a>
+            	<a class="btn btn-default disabled" id="btnPause">Pause</a>
+            	<a class="btn btn-default" id="btnContinue">Continue</a>
             </div>
         </div>
     </div>
@@ -72,7 +74,7 @@
 	            </div>
 	            <div class="form-group checkbox checkbox-success">
 	            	<input type="checkbox" class="checkbox" id="preloadFiles" value="" />
-	            	<label for="preloadFiles">Preload file list (not implemented)</label>
+	            	<label for="preloadFiles">Preload file list</label>
 	            </div>
 	            <div class="form-group checkbox checkbox-success">
 	            	<input type="checkbox" class="checkbox" id="useSystemCalls" value="" />

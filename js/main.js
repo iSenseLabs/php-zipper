@@ -10,6 +10,7 @@ var lastPrintedMessage = '';
 var initialRun = 1;
 var selected_paths = [];
 var lastZipResponse = {};
+var isPaused = false;
 
 function populate_dir_listing(entries) {
 	dirListingObj.empty();
@@ -58,7 +59,7 @@ function get_dir_listing(target_dir) {
 }
 
 function watchProgress() {
-	if (processFinished) progressLastRun = true;
+	if (processFinished || isPaused) progressLastRun = true;
 	else progressLastRun = false;
 	setTimeout(function() {
 		$.ajax({
@@ -92,7 +93,8 @@ function watchProgress() {
 				
 				if (progressLastRun) {
 					progressBarObj.removeClass('active');
-					$('#btnZipAll, #btnZipSelected').removeClass('disabled');
+					$('#btnZipAll, #btnZipSelected, #btnContinue').removeClass('disabled');
+					$('#btnPause').addClass('disabled');
 				}
 			},
 			complete: function() {
@@ -105,20 +107,26 @@ function watchProgress() {
 }
 
 function zip(target_paths) {
+    if (isPaused) return;
+		
 	if (initialRun) {
-		$('#btnZipAll, #btnZipSelected').addClass('disabled');
-		progressBarObj.addClass('active');
 		progressLogObj.val("");
 		lastPrintedMessage = '';
 	}
+	
+	$('#btnZipAll, #btnZipSelected, #btnContinue').addClass('disabled');
+	$('#btnPause').removeClass('disabled');
+	progressBarObj.addClass('active');
 	
 	var flushToDisk = $('#flushToDisk').val() ? $('#flushToDisk').val() : 50;
 	var maxExecutionTime = $('#maxExecutionTime').val() ? $('#maxExecutionTime').val() : 20;
 	var exclude_strings = $('#excludes').val() ? $('#excludes').val() : '';
 	var useSystemCalls = $('#useSystemCalls').is(':checked');
+	var preloadFiles = $('#preloadFiles').is(':checked');
+	var zip_url = preloadFiles ? 'zip-preload.php' : 'zip.php';
 	
 	$.ajax({
-		url: 'zip.php',
+		url: zip_url,
 		type: 'POST',
 		data: {
 			targets: target_paths,
@@ -180,7 +188,7 @@ $(document).on('click', '.dir-listing-entry', function(e){
 
 $(document).on('click', '#btnZipSelected:not(.disabled)', function() {
 	initialRun = 1;
-	o_file = '';
+	isPaused = false;
 	selected_paths = [];
 	$('input[name="targetEntries"]:checked').each(function(i, e){
 		var key = e.value;
@@ -198,11 +206,25 @@ $(document).on('click', '#btnZipSelected:not(.disabled)', function() {
 
 $(document).on('click', '#btnZipAll:not(.disabled)', function() {
 	initialRun = 1;
-	o_file = '';
+	isPaused = false;
 	if (cwd) {
 		selected_paths = [cwd];
 		zip(selected_paths);
 	}
+});
+
+$(document).on('click', '#btnPause:not(.disabled)', function() {
+    $.ajax({url: 'abort.php'});
+	isPaused = true;
+	$(this).addClass('disabled');
+});
+
+$(document).on('click', '#btnContinue:not(.disabled)', function() {
+    if (selected_paths) {
+    	isPaused = false;
+    	zip(selected_paths);
+    	watchProgress();
+    }
 });
 
 $(document).ready(function(){
