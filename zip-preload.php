@@ -95,13 +95,6 @@ $progress = new iProgress('zip', 200);
 
 $json = array();
 
-$targets = !empty($_POST['targets']) ? $_POST['targets'] : array();
-if (!$targets) {
-	$json['error'] = true;
-	$json['msg'] = 'Bad targets';
-	echo json_encode($json);exit;
-}
-
 $is_initial_run = !empty($_POST['is_initial_run']);
 $flush_to_disk = !empty($_POST['flush_to_disk']) ? (int)$_POST['flush_to_disk'] : 50;
 $max_execution_time = !empty($_POST['max_execution_time']) ? (int)$_POST['max_execution_time'] : 20;
@@ -110,9 +103,17 @@ $excludes = array_filter(array_map('trim', explode(',', $exclude_string)));
 $use_system_calls = (!empty($_POST['use_system_calls']) && $_POST['use_system_calls'] == 'true') ? true : false;
 $last_abort_check = microtime(true);
 
+$targets = ($is_initial_run && !empty($_POST['targets'])) ? $_POST['targets'] : $progress->getData('targets');
+if (!$targets) {
+	$json['error'] = true;
+	$json['msg'] = 'Bad targets';
+	echo json_encode($json);exit;
+}
+
 if ($is_initial_run) {
 	$progress->clear();
 	$progress->addMsg('Scanning files to be compressed...');
+	$progress->setData('targets', $targets);
 }
 
 $total_targets = $is_initial_run ? 0 : $progress->getMax();
