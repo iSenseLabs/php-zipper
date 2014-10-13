@@ -149,7 +149,7 @@ if ($is_initial_run) {
 	$progress->setData('last_pointer_position', 0);
 }
 
-$oFile = ($is_initial_run || empty($progress->getData('oFile'))) ? dirname(__FILE__).'/archive_'.time().'.zip' : $progress->getData('oFile');
+$oFile = ($is_initial_run || $progress->getData('oFile')) ? dirname(__FILE__).'/archive_'.time().'.zip' : $progress->getData('oFile');
 $progress->setData('oFile', $oFile);
 
 $zip = new ZipArchive();
