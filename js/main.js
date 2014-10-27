@@ -159,7 +159,7 @@ function zip(target_paths) {
     				    text: 'Would you like to download it?',
     				    type: 'success',
     				    showCancelButton: true,
-    				    confirmButtonText: 'Downlaod',
+    				    confirmButtonText: 'Download',
     				    confirmButtonColor: '#FF4A4A'
     				},
     				function(){
