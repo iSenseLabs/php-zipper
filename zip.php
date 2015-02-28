@@ -169,7 +169,7 @@ if ($is_initial_run) {
 	$progress->setMax($total_targets);
 }
 
-$oFile = ($is_initial_run || $progress->getData('oFile')) ? dirname(__FILE__).'/archive_'.time().'.zip' : $progress->getData('oFile');
+$oFile = ($is_initial_run || !$progress->getData('oFile')) ? dirname(__FILE__).'/archive_'.time().'.zip' : $progress->getData('oFile');
 $progress->setData('oFile', $oFile);
 
 $zip = new ZipArchive();
